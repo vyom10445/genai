@@ -8,6 +8,7 @@ from langchain.tools import tool
 from langchain_core.messages import HumanMessage , ToolMessage
 from tavily import TavilyClient
 from rich import print
+from langchain.agents import create_agent
 
 #create some tools
 
@@ -71,13 +72,22 @@ def get_news(city: str) -> str:
 llm = ChatMistralAI(model="mistral-small-2506")
 
 
-tools = {
-    get_weather : get_weather,
-    get_news : get_news
-}
-
-
-llm_with_tools = llm.bind([get_weather , get_news])
-
-
 #  AGENT LOOP
+
+agent = create_agent(
+    llm,
+    tools= [get_weather , get_news],
+    system_prompt=  "you are a helpful city assistant"
+)
+
+print("City assistant  | Type exit to quit")
+
+while True:
+    user_input = input("You: ")
+    if user_input.lower() == "exit":
+        break
+    result = agent.invoke(
+    {"messages": [{"role": "user", "content": user_input}]},
+)
+    
+    print("AI : ", result['messages'][-1].content )
